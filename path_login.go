@@ -91,75 +91,74 @@ func (b *cfAuthBackend) pathLogin(ctx context.Context, req *logical.Request, d *
 		return logical.ErrorResponse("could not load configuration"), nil
 	}
 
-
 	var claims struct {
 		UserName string `json:"user_name"`
 		UserID   string `json:"user_id"`
 	}
 
-		provider, err := b.getProvider(ctx, config)
-		if err != nil {
-			return nil, errwrap.Wrapf("error getting provider for login operation: {{err}}", err)
-		}
+	provider, err := b.getProvider(ctx, config)
+	if err != nil {
+		return nil, errwrap.Wrapf("error getting provider for login operation: {{err}}", err)
+	}
 
-		verifier := provider.Verifier(&oidc.Config{
-			SkipClientIDCheck: true,
-		})
+	verifier := provider.Verifier(&oidc.Config{
+		SkipClientIDCheck: true,
+	})
 
-		idToken, err := verifier.Verify(ctx, token)
-		if err != nil {
-			return logical.ErrorResponse(errwrap.Wrapf("error validating signature: {{err}}", err).Error()), nil
-		}
+	idToken, err := verifier.Verify(ctx, token)
+	if err != nil {
+		return logical.ErrorResponse(errwrap.Wrapf("error validating signature: {{err}}", err).Error()), nil
+	}
 
-		if err := idToken.Claims(&claims); err != nil {
-			return logical.ErrorResponse(errwrap.Wrapf("unable to successfully parse all claims from token: {{err}}", err).Error()), nil
-		}
+	if err := idToken.Claims(&claims); err != nil {
+		return logical.ErrorResponse(errwrap.Wrapf("unable to successfully parse all claims from token: {{err}}", err).Error()), nil
+	}
 
-		//Create a client for us to get the CF orgs and spaces
-		staticToken := new(oauth2.Token)
-		staticToken.AccessToken = token
-		client := oauth2.NewClient(ctx, oauth2.StaticTokenSource(staticToken))
+	//Create a client for us to get the CF orgs and spaces
+	staticToken := new(oauth2.Token)
+	staticToken.AccessToken = token
+	client := oauth2.NewClient(ctx, oauth2.StaticTokenSource(staticToken))
 
-		//Orgs
-		var orgs CCResponse
-		orgsResp, err := client.Get(fmt.Sprintf("%s/v2/users/%s/organizations", config.APIURL, claims.UserID))
-		if err != nil {
-			return logical.ErrorResponse(errwrap.Wrapf("unable to retrieve CF orgs: {{err}}", err).Error()), nil
-		}
-		err = json.NewDecoder(orgsResp.Body).Decode(&orgs)
-		if err != nil {
-			return logical.ErrorResponse(errwrap.Wrapf("unable to parse CF orgs: {{err}}", err).Error()), nil
-		}
+	//Orgs
+	var orgs CCResponse
+	orgsResp, err := client.Get(fmt.Sprintf("%s/v2/users/%s/organizations", config.APIURL, claims.UserID))
+	if err != nil {
+		return logical.ErrorResponse(errwrap.Wrapf("unable to retrieve CF orgs: {{err}}", err).Error()), nil
+	}
+	err = json.NewDecoder(orgsResp.Body).Decode(&orgs)
+	if err != nil {
+		return logical.ErrorResponse(errwrap.Wrapf("unable to parse CF orgs: {{err}}", err).Error()), nil
+	}
 
-		//Get the spaces
-		var spaces CCResponse
-		spacesResp, err := client.Get(fmt.Sprintf("%s/v2/users/%s/spaces", config.APIURL, claims.UserID))
-		if err != nil {
-			return logical.ErrorResponse(errwrap.Wrapf("unable to retrieve CF spaces: {{err}}", err).Error()), nil
-		}
-		err = json.NewDecoder(spacesResp.Body).Decode(&spaces)
-		if err != nil {
-			return logical.ErrorResponse(errwrap.Wrapf("unable to parse CF spaces: {{err}}", err).Error()), nil
-		}
+	//Get the spaces
+	var spaces CCResponse
+	spacesResp, err := client.Get(fmt.Sprintf("%s/v2/users/%s/spaces", config.APIURL, claims.UserID))
+	if err != nil {
+		return logical.ErrorResponse(errwrap.Wrapf("unable to retrieve CF spaces: {{err}}", err).Error()), nil
+	}
+	err = json.NewDecoder(spacesResp.Body).Decode(&spaces)
+	if err != nil {
+		return logical.ErrorResponse(errwrap.Wrapf("unable to parse CF spaces: {{err}}", err).Error()), nil
+	}
 
-		var guids []string
-		for _, resource := range orgs.Resources {
-			guids = append(guids, resource.Metadata.Guid)
-		}
-		for _, resource := range spaces.Resources {
-			guids = append(guids, resource.Metadata.Guid)
-		}
+	var guids []string
+	for _, resource := range orgs.Resources {
+		guids = append(guids, resource.Metadata.Guid)
+	}
+	for _, resource := range spaces.Resources {
+		guids = append(guids, resource.Metadata.Guid)
+	}
 
-		var found bool
-		for _, v := range role.BoundGUIDs {
-			if strutil.StrListContains(guids, v) {
-				found = true
-				break
-			}
+	var found bool
+	for _, v := range role.BoundGUIDs {
+		if strutil.StrListContains(guids, v) {
+			found = true
+			break
 		}
-		if !found {
-			return logical.ErrorResponse("Could not find any matching CF GUIDs"), nil
-		}
+	}
+	if !found {
+		return logical.ErrorResponse("Could not find any matching CF GUIDs"), nil
+	}
 
 	//Get our user metadata
 	userName := claims.UserName
@@ -181,8 +180,8 @@ func (b *cfAuthBackend) pathLogin(ctx context.Context, req *logical.Request, d *
 				"role": roleName,
 			},
 			Metadata: map[string]string{
-				"role":    roleName,
-				"user_id": userID,
+				"role":      roleName,
+				"user_id":   userID,
 				"user_name": userName,
 			},
 			LeaseOptions: logical.LeaseOptions{

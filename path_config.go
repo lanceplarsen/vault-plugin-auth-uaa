@@ -4,8 +4,8 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"errors"
-	"net/http"
 	"fmt"
+	"net/http"
 
 	"context"
 
@@ -69,7 +69,6 @@ func (b *cfAuthBackend) config(ctx context.Context, s logical.Storage) (*cfConfi
 		}
 	}
 
-
 	b.cachedConfig = result
 
 	return result, nil
@@ -86,8 +85,8 @@ func (b *cfAuthBackend) pathConfigRead(ctx context.Context, req *logical.Request
 
 	resp := &logical.Response{
 		Data: map[string]interface{}{
-			"uaa_url":    config.UAAURL,
-			"api_url":    config.APIURL,
+			"uaa_url":   config.UAAURL,
+			"api_url":   config.APIURL,
 			"cf_ca_pem": config.CFCAPEM,
 		},
 	}
@@ -97,8 +96,8 @@ func (b *cfAuthBackend) pathConfigRead(ctx context.Context, req *logical.Request
 
 func (b *cfAuthBackend) pathConfigWrite(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
 	config := &cfConfig{
-		UAAURL:   d.Get("uaa_url").(string),
-		APIURL:   d.Get("api_url").(string),
+		UAAURL:  d.Get("uaa_url").(string),
+		APIURL:  d.Get("api_url").(string),
 		CFCAPEM: d.Get("cf_ca_pem").(string),
 	}
 
@@ -149,8 +148,8 @@ func (b *cfAuthBackend) createProvider(config *cfConfig) (*oidc.Provider, error)
 }
 
 type cfConfig struct {
-	UAAURL   string `json:"uaa_url"`
-	APIURL   string `json:"api_url"`
+	UAAURL  string `json:"uaa_url"`
+	APIURL  string `json:"api_url"`
 	CFCAPEM string `json:"cf_ca_pem"`
 }
 
