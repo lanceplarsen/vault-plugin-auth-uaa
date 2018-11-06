@@ -1,4 +1,4 @@
-# Vault Plugin: Cloud Foundry Auth Backend
+# Vault Plugin: Cloud Foundry Auth Method
 
 This is a standalone backend plugin for use with [Hashicorp Vault](https://www.github.com/hashicorp/vault).
 This plugin allows for Pivotal Cloud Foundry accounts to authenticate with Vault.
